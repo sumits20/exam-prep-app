@@ -42,11 +42,13 @@ or major component.
   (jsonb array of session_ids), domain_analysis (jsonb),
   scenario_analysis (jsonb), study_recommendations (text)
 
-Question bank source of truth lives in `/data/foundations_questions.json`
-(250 questions, schema documented in its own `metadata.schema` field).
-The Architect Professional question bank does not exist yet — do not
-fabricate questions for it; that exam type should be visibly disabled/
-"coming soon" in the UI until a real bank is added.
+Question bank source of truth lives in
+`/data/architect-foundations_questions.json` (250 questions, schema
+documented in its own `metadata.schema` field). The Architect Professional
+question bank does not exist yet — do not fabricate questions for it; that
+exam type should be visibly disabled/"coming soon" in the UI until a real
+bank is added. When it is added, it will follow the same naming pattern:
+`/data/architect-professional_questions.json`.
 
 ## Session rules — important business logic
 - A session is `in_progress` from creation until explicitly completed.
