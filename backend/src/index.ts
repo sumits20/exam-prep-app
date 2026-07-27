@@ -3,6 +3,9 @@ import 'dotenv/config';
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { authRouter } from './routes/auth.js';
+import { examTypesRouter } from './routes/examTypes.js';
+import { examSessionsRouter } from './routes/examSessions.js';
+import { domainSummaryRouter } from './routes/domainSummary.js';
 
 class CorsRejectionError extends Error {}
 
@@ -19,6 +22,8 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+app.use(express.json());
 
 app.use(
   cors({
@@ -39,6 +44,9 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/auth', authRouter);
+app.use('/exam-types', examTypesRouter);
+app.use('/exam-sessions', examSessionsRouter);
+app.use('/domain-summary', domainSummaryRouter);
 
 app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
   if (err instanceof CorsRejectionError) {
