@@ -1,24 +1,14 @@
 // Aesthetic direction: this is the public marketing/sign-in page, so it uses the
 // same light app-shell system as the rest of the product (--app-* tokens,
 // .card--raised, .domain-chip, .eyebrow) rather than a separate splash look.
-// The hero is intentionally exam-program-agnostic (ExamOwl supports multiple
-// certification tracks) — the Claude-specific domain-weighting bar, built from
-// the paper generator's real weights (see backend exam_domains), lives in the
-// "Available exams" section instead, scoped to the one track that's actually
-// live, not implied to be a platform-wide mechanic.
+// Kept entirely program-agnostic (ExamOwl supports multiple certification
+// tracks) — no exam-specific implementation detail (domain weightings, exam
+// guide names, passing thresholds) belongs here; that lives inside the actual
+// exam experience once a track is picked.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { DOMAIN_NAMES, domainColorVar } from '../lib/constants';
 import './Login.css';
-
-const DOMAIN_WEIGHTS: { domain: number; pct: number }[] = [
-  { domain: 1, pct: 27 },
-  { domain: 2, pct: 18 },
-  { domain: 3, pct: 20 },
-  { domain: 4, pct: 20 },
-  { domain: 5, pct: 15 },
-];
 
 const EXAM_TILES = [
   {
@@ -166,37 +156,16 @@ export function Login() {
               )
             )}
           </div>
-
-          <div className="landing__weightbar-wrap">
-            <p className="landing__weightbar-label">Claude Certification papers are drawn to this exact domain weighting</p>
-            <div className="landing__weightbar">
-              {DOMAIN_WEIGHTS.map((d) => (
-                <span
-                  key={d.domain}
-                  className="landing__weightbar-seg"
-                  style={{ width: ready ? `${d.pct}%` : 0, background: domainColorVar(d.domain) }}
-                />
-              ))}
-            </div>
-            <div className="landing__weightbar-legend">
-              {DOMAIN_WEIGHTS.map((d) => (
-                <span key={d.domain} className="domain-chip" style={{ color: domainColorVar(d.domain) }}>
-                  <span className="domain-chip__dot" />
-                  {DOMAIN_NAMES[d.domain]} &middot; {d.pct}%
-                </span>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section className="landing__section">
           <p className="eyebrow">What is ExamOwl</p>
           <h2 className="landing__section-heading">Built to feel like the real exam, not a quiz app</h2>
           <p className="landing__section-body">
-            Every paper draws from a bank of scenario-based questions modeled on the official exam guide,
-            samples it to match the real domain weighting, and scores it against the same 72% passing
-            threshold. After every attempt you get a full review — what you got right, what you missed, and
-            why — plus a running history across every session you take.
+            Every paper draws from a scenario-based question bank modeled on the official exam blueprint for
+            that certification, sampled to match the real domain weighting, and scored against the actual
+            passing threshold. After every attempt you get a full review — what you got right, what you
+            missed, and why — plus a running history across every session you take.
           </p>
 
           <div className="landing__stats">
