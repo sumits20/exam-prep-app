@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthSession } from '../lib/AuthContext';
 import { answerQuestion, completeExamSession, getExamSession } from '../lib/api';
 import type { GetSessionResponse, Option } from '../lib/types';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { DomainChip } from '../components/DomainChip';
 import { SegmentedProgressBar } from '../components/SegmentedProgressBar';
 import './ExamSession.css';
@@ -17,6 +18,7 @@ export function ExamSession() {
   const [index, setIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +62,12 @@ export function ExamSession() {
     }
   }
 
+  function handleSubmitClick() {
+    // Always confirm — even with everything answered, submitting ends the
+    // session and can't be undone, so it shouldn't go through on a single tap.
+    setConfirmingSubmit(true);
+  }
+
   if (error && !data) {
     return (
       <p className="exam-session__error" role="alert">
@@ -76,6 +84,9 @@ export function ExamSession() {
   const q = questions[index];
   const answeredCount = questions.filter((qq) => qq.selectedOption).length;
   const unansweredCount = questions.length - answeredCount;
+  const isLastQuestion = index === questions.length - 1;
+  const allAnswered = unansweredCount === 0;
+  const submitIsPrimary = isLastQuestion || allAnswered;
 
   return (
     <div className="exam-session">
@@ -113,28 +124,56 @@ export function ExamSession() {
       )}
 
       <div className="exam-session__nav">
-        <button type="button" className="btn btn--ghost" disabled={index === 0} onClick={() => setIndex((i) => i - 1)}>
-          Previous
-        </button>
-        <button
-          type="button"
-          className="btn btn--ghost"
-          disabled={index === questions.length - 1}
-          onClick={() => setIndex((i) => i + 1)}
-        >
-          Next
-        </button>
-        <span className="exam-session__answered">
-          {answeredCount} of {questions.length} answered
-        </span>
-        <button type="button" className="btn btn--primary" disabled={submitting} onClick={handleSubmit}>
-          {submitting
-            ? 'Submitting…'
-            : unansweredCount > 0
-              ? `Submit exam (${unansweredCount} unanswered)`
-              : 'Submit exam'}
-        </button>
+        <div className="exam-session__nav-group">
+          <button
+            type="button"
+            className="exam-session__nav-btn"
+            disabled={index === 0}
+            onClick={() => setIndex((i) => i - 1)}
+          >
+            &larr; Previous
+          </button>
+          <button
+            type="button"
+            className="exam-session__nav-btn"
+            disabled={isLastQuestion}
+            onClick={() => setIndex((i) => i + 1)}
+          >
+            Next &rarr;
+          </button>
+        </div>
+
+        <div className="exam-session__submit-group">
+          <span className="exam-session__answered">
+            {answeredCount} of {questions.length} answered
+          </span>
+          <button
+            type="button"
+            className={`exam-session__submit-btn${submitIsPrimary ? ' exam-session__submit-btn--primary' : ' exam-session__submit-btn--muted'}`}
+            disabled={submitting}
+            onClick={handleSubmitClick}
+          >
+            {submitting ? 'Submitting…' : 'Submit exam'}
+          </button>
+        </div>
       </div>
+
+      {confirmingSubmit && (
+        <ConfirmDialog
+          title={unansweredCount > 0 ? 'Submit with unanswered questions?' : 'Submit your exam?'}
+          message={
+            unansweredCount > 0
+              ? `You have ${unansweredCount} unanswered question${unansweredCount === 1 ? '' : 's'}. ${unansweredCount === 1 ? 'It' : 'They'} will be scored as incorrect. Submit anyway?`
+              : "You've answered every question. Submitting ends the session and can't be undone."
+          }
+          confirmLabel={unansweredCount > 0 ? 'Submit anyway' : 'Submit exam'}
+          onConfirm={() => {
+            setConfirmingSubmit(false);
+            handleSubmit();
+          }}
+          onCancel={() => setConfirmingSubmit(false)}
+        />
+      )}
     </div>
   );
 }
