@@ -5,6 +5,8 @@ import { supabase } from './lib/supabase';
 import { recordLogin } from './lib/api';
 import { AuthProvider } from './lib/AuthContext';
 import { Login } from './pages/Login';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { NavShell } from './components/NavShell';
 import { ExamPicker } from './pages/ExamPicker';
 import { ExamSession } from './pages/ExamSession';
@@ -13,6 +15,14 @@ import { History } from './pages/History';
 import { SessionReview } from './pages/SessionReview';
 import { WeakAreas } from './pages/WeakAreas';
 import { DomainDrilldown } from './pages/DomainDrilldown';
+
+function AuthedApp({ session }: { session: Session }) {
+  return (
+    <AuthProvider session={session}>
+      <NavShell />
+    </AuthProvider>
+  );
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -41,15 +51,16 @@ export default function App() {
     return null;
   }
 
-  if (!session) {
-    return <Login />;
-  }
-
   return (
-    <AuthProvider session={session}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<NavShell />}>
+    <BrowserRouter>
+      <Routes>
+        {/* Public — reachable with no session, required for Google OAuth verification
+            (a homepage plus Privacy Policy / Terms of Service, all publicly crawlable). */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+
+        {session ? (
+          <Route element={<AuthedApp session={session} />}>
             <Route path="/" element={<Navigate to="/exam" replace />} />
             <Route path="/exam" element={<ExamPicker />} />
             <Route path="/exam/:sessionId" element={<ExamSession />} />
@@ -60,8 +71,13 @@ export default function App() {
             <Route path="/weak-areas/:examType/:domain" element={<DomainDrilldown />} />
             <Route path="*" element={<Navigate to="/exam" replace />} />
           </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        ) : (
+          <>
+            <Route path="/" element={<Login />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        )}
+      </Routes>
+    </BrowserRouter>
   );
 }

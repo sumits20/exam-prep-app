@@ -150,3 +150,23 @@
   font-size: 0.75rem;
   color: var(--error);
 }
+
+.login__legal {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.login__legal a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.login__legal a:hover {
+  color: var(--line-cyan);
+  text-decoration: underline;
+}

@@ -12,7 +12,7 @@ class CorsRejectionError extends Error {}
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
-// Falls back to local dev; set to the deployed Cloudflare Pages URL in production.
+// Falls back to local dev; set to the deployed frontend URL (examowl.co.uk) in production.
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
 app.use((req, res, next) => {

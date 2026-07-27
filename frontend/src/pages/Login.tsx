@@ -2,6 +2,7 @@
 // blue-on-navy, hairline grid, corner registration marks, condensed stenciled
 // display type. Chosen to literalize "Architect" in the exam name.
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import './Login.css';
 
@@ -39,7 +40,7 @@ export function Login() {
         <span className="login__corner login__corner--bl" aria-hidden="true" />
         <span className="login__corner login__corner--br" aria-hidden="true" />
 
-        <p className="login__eyebrow">Claude Certified Architect &middot; Foundations</p>
+        <p className="login__eyebrow">ExamOwl &middot; Claude Certified Architect &mdash; Foundations</p>
         <h1 className="login__headline">Access Terminal</h1>
         <p className="login__subhead">
           Sign in to draw your practice paper and pick up where you left off.
@@ -60,6 +61,12 @@ export function Login() {
             {error}
           </p>
         )}
+
+        <div className="login__legal">
+          <Link to="/privacy">Privacy Policy</Link>
+          <span aria-hidden="true">&middot;</span>
+          <Link to="/terms">Terms of Service</Link>
+        </div>
       </div>
     </div>
   );
