@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { recordLogin } from './lib/api';
+import { AuthProvider } from './lib/AuthContext';
 import { Login } from './pages/Login';
+import { NavShell } from './components/NavShell';
+import { ExamPicker } from './pages/ExamPicker';
+import { ExamSession } from './pages/ExamSession';
+import { ExamSummary } from './pages/ExamSummary';
+import { History } from './pages/History';
+import { SessionReview } from './pages/SessionReview';
+import { WeakAreas } from './pages/WeakAreas';
+import { DomainDrilldown } from './pages/DomainDrilldown';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -35,11 +45,23 @@ export default function App() {
     return <Login />;
   }
 
-  // Placeholder — exam selection routing is the next step.
   return (
-    <main className="session-placeholder">
-      <p className="session-placeholder__eyebrow">Access granted</p>
-      <h1 className="session-placeholder__headline">Logged in as {session.user.email}</h1>
-    </main>
+    <AuthProvider session={session}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<NavShell />}>
+            <Route path="/" element={<Navigate to="/exam" replace />} />
+            <Route path="/exam" element={<ExamPicker />} />
+            <Route path="/exam/:sessionId" element={<ExamSession />} />
+            <Route path="/exam/:sessionId/summary" element={<ExamSummary />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/history/:sessionId" element={<SessionReview />} />
+            <Route path="/weak-areas" element={<WeakAreas />} />
+            <Route path="/weak-areas/:domain" element={<DomainDrilldown />} />
+            <Route path="*" element={<Navigate to="/exam" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

@@ -1,6 +1,8 @@
 :root {
   color-scheme: dark;
 
+  /* Login-only tokens — the splash screen keeps its own permanent cyanotype
+     look regardless of the app-shell theme toggle below. */
   --bg-void: #0b1220;
   --bg-panel: #121b30;
   --bg-panel-raised: #172441;
@@ -11,12 +13,79 @@
   --text-primary: #eaf3f8;
   --text-muted: #7891ac;
   --error: #e8615f;
+  --success: #5fd48f;
 
   --font-display: 'Big Shoulders Display', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
   --ease-draft: cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* --- App shell (everything past login) ---
+     Light is the default/primary theme; [data-theme='dark'] below overrides
+     every --app-* / --domain-* value for the optional dark mode. Same
+     page-vs-card surface hierarchy in both: --app-bg is the page, --app-surface
+     is what cards lift off of, --app-surface-raised is one step further
+     (hover states, table headers). */
+  color-scheme: light;
+
+  --app-bg: #f3f4fa;
+  --app-surface: #ffffff;
+  --app-surface-raised: #edf0f8;
+  --app-border: rgba(30, 41, 82, 0.1);
+  --app-border-strong: rgba(30, 41, 82, 0.22);
+  --app-text-primary: #1a2140;
+  --app-text-muted: #5c6690;
+  --app-shadow: 0 1px 2px rgba(20, 24, 60, 0.05), 0 10px 24px rgba(20, 24, 60, 0.07);
+
+  --app-accent: #0b7a94;
+  --app-accent-tint: rgba(11, 122, 148, 0.1);
+  --app-accent-fg: #ffffff;
+  --app-cta: #c1660f;
+  --app-cta-fg: #fffaf3;
+  --app-cta-tint: rgba(193, 102, 15, 0.1);
+
+  --app-success: #15825f;
+  --app-success-bg: rgba(21, 130, 95, 0.12);
+  --app-error: #c13a56;
+  --app-error-bg: rgba(193, 58, 86, 0.12);
+
+  --domain-1: #0e7490;
+  --domain-2: #4338ca;
+  --domain-3: #6d28d9;
+  --domain-4: #047857;
+  --domain-5: #a21caf;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --app-bg: #131a30;
+  --app-surface: #1d2542;
+  --app-surface-raised: #29325a;
+  --app-border: rgba(163, 177, 224, 0.12);
+  --app-border-strong: rgba(163, 177, 224, 0.24);
+  --app-text-primary: #f0f3fc;
+  --app-text-muted: #96a2c7;
+  --app-shadow: 0 1px 2px rgba(4, 7, 20, 0.4), 0 10px 28px rgba(4, 7, 20, 0.32);
+
+  --app-accent: #5ecbe0;
+  --app-accent-tint: rgba(94, 203, 224, 0.14);
+  --app-accent-fg: #0d1b26;
+  --app-cta: #f2ac4f;
+  --app-cta-fg: #201404;
+  --app-cta-tint: rgba(242, 172, 79, 0.16);
+
+  --app-success: #3ddc9b;
+  --app-success-bg: rgba(61, 220, 155, 0.16);
+  --app-error: #f37272;
+  --app-error-bg: rgba(243, 114, 114, 0.16);
+
+  --domain-1: #5fd4e8;
+  --domain-2: #7c9fe8;
+  --domain-3: #9c8ce8;
+  --domain-4: #4fb88f;
+  --domain-5: #c98fd6;
 }
 
 * {
@@ -47,32 +116,134 @@ button {
   outline-offset: 2px;
 }
 
-.session-placeholder {
-  min-height: 100vh;
+/* Shared app-shell primitives (everything past login) — layered surfaces,
+   filled/tinted status states, sentence-case sans-serif copy. Monospace is
+   reserved for genuinely data-like values (timers, question counters) —
+   labels, chips, and headings all use --font-body. */
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-accent);
+  margin: 0 0 0.5rem;
+}
+
+.card--raised {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow);
+}
+
+.progress-segments {
   display: flex;
-  flex-direction: column;
+  gap: 3px;
+}
+
+.progress-segments__seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--app-border-strong);
+  transition: background 0.25s var(--ease-draft);
+}
+
+.domain-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: currentColor;
+  padding: 0.3rem 0.7rem;
+  background: color-mix(in srgb, currentColor 16%, var(--app-surface));
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.domain-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+}
+
+.score-badge--pass {
+  color: var(--app-success);
+  background: var(--app-success-bg);
+}
+
+.score-badge--fail {
+  color: var(--app-error);
+  background: var(--app-error-bg);
+}
+
+.score-badge__value {
+  font-size: 1rem;
+}
+
+.score-badge__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 2rem;
-  text-align: center;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.2rem;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s var(--ease-draft), color 0.2s var(--ease-draft), opacity 0.2s var(--ease-draft);
 }
 
-.session-placeholder__eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--seal-amber);
-  margin: 0;
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
-.session-placeholder__headline {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.75rem, 5vw, 3rem);
-  letter-spacing: -0.01em;
-  margin: 0;
+.btn--primary {
+  background: var(--app-cta);
+  color: var(--app-cta-fg);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--app-cta) 85%, white);
+}
+
+.btn--ghost {
+  background: var(--app-surface-raised);
+  color: var(--app-text-muted);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--app-accent-tint);
+  color: var(--app-text-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

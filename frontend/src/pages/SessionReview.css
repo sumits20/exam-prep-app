@@ -1,0 +1,88 @@
+.session-review__back {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+}
+
+.session-review__back:hover {
+  color: var(--app-text-primary);
+}
+
+.session-review__headline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.session-review__headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  letter-spacing: -0.01em;
+  margin: 0.25rem 0 0;
+}
+
+.session-review__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.session-review__filter {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--app-text-muted);
+  background: var(--app-surface);
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-draft), color 0.2s var(--ease-draft);
+}
+
+.session-review__filter:hover {
+  background: var(--app-surface-raised);
+  color: var(--app-text-primary);
+}
+
+.session-review__filter--active {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+}
+
+.session-review__filter--active:hover {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+}
+
+.session-review__footer {
+  margin-top: 2rem;
+}
+
+.session-review__footer-link {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--app-cta);
+  text-decoration: none;
+}
+
+.session-review__footer-link:hover {
+  text-decoration: underline;
+}
+
+.session-review__error,
+.session-review__loading {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
+}

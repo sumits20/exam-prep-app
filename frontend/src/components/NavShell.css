@@ -1,0 +1,120 @@
+.nav-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+  color: var(--app-text-primary);
+}
+
+.nav-shell :focus-visible {
+  outline-color: var(--app-accent);
+}
+
+.nav-shell__header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 1.75rem;
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+  position: relative;
+  z-index: 1;
+}
+
+.nav-shell__brand {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--app-text-primary);
+  white-space: nowrap;
+}
+
+.nav-shell__tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.nav-shell__tab {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--app-text-muted);
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  transition: color 0.2s var(--ease-draft), background 0.2s var(--ease-draft);
+}
+
+.nav-shell__tab:hover {
+  color: var(--app-text-primary);
+  background: var(--app-surface-raised);
+}
+
+.nav-shell__tab--active {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+  font-weight: 700;
+}
+
+.nav-shell__tab--active:hover {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+}
+
+.nav-shell__account {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.nav-shell__email {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+}
+
+.nav-shell__signout {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+  background: var(--app-surface-raised);
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s var(--ease-draft), background 0.2s var(--ease-draft);
+}
+
+.nav-shell__signout:hover {
+  background: var(--app-error-bg);
+  color: var(--app-error);
+}
+
+.nav-shell__theme-toggle {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+  background: var(--app-surface-raised);
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s var(--ease-draft), background 0.2s var(--ease-draft);
+}
+
+.nav-shell__theme-toggle:hover {
+  background: var(--app-accent-tint);
+  color: var(--app-text-primary);
+}
+
+.nav-shell__content {
+  flex: 1;
+  padding: 2.25rem 1.75rem 3rem;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
