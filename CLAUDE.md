@@ -26,6 +26,28 @@ performance by domain and scenario and suggests study topics.
   `app_settings`.
 - **Animation**: Framer Motion for transitions and micro-interactions.
 
+## Implemented so far
+- **Backend routes**: `/auth/record-login`, `/exam-types`, `/exam-sessions`
+  (create/list/get/answer/complete/review/delete), `/domain-summary`
+  (+ `/domain-summary/:domain/questions` drilldown). Paper generation
+  (`backend/src/lib/paperGeneration.ts`) draws scenarios and samples the
+  weighted 60-question paper, with a retry-then-redistribute fallback for
+  scenario draws that can't hit the exact weighting from the current bank.
+- **Frontend pages**, all behind Google OAuth and wrapped in a shared
+  `NavShell` (Take exam / History / Weak areas tabs): `ExamPicker` (start
+  new / continue in-progress / domain-practice), `ExamSession` (in-progress
+  question-answering UI), `ExamSummary`, `History` (sortable/filterable,
+  with delete-in-progress), `SessionReview` (per-question + cross-session
+  pattern callouts), `WeakAreas`, `DomainDrilldown`.
+- **Not yet built**: admin console, AI evaluation feature, the
+  abandoned-session cron sweep.
+- **Design system**: the app shell (everything past login) uses its own
+  `--app-*` token set in `frontend/src/styles/index.css`, light as the
+  default theme with a `[data-theme='dark']` override block and a
+  nav-bar toggle (persisted to `localStorage`). This is intentionally
+  separate from Login's permanent cyanotype/blueprint splash tokens
+  (`--bg-void`, `--line-cyan`, etc.), which don't change with the toggle.
+
 ## Design mandate — READ THIS BEFORE WRITING ANY UI CODE
 Do not default to generic AI-generated aesthetics: no default Inter font,
 no purple/blue gradient backgrounds, no generic rounded white cards with
@@ -43,12 +65,30 @@ The question bank lives in the database (`questions` table), not a
 static JSON file — this is deliberate, for scalability (adding the
 Professional bank is just new rows, not a new file to manage) and
 queryability (filter by domain/scenario at the DB level rather than
-loading everything into memory). The original `foundations_questions.json`
-in `/data` is the one-time import source, imported via a migration
-script — not read at runtime by the app.
+loading everything into memory). `data/architect-foundations_questions.json`
+is the import source (re-run `npm run import:questions` in `backend/`
+whenever it's updated — the script upserts by `id` and skips rows that
+already exist, so it's safe to re-run), not read at runtime by the app.
+As of the last import it holds 319 questions across the original 6 official
+scenarios plus a 7th, **General Knowledge**, which is intentionally outside
+the standard 4-of-6 scenario draw (only reachable via domain-practice mode)
+— confirm before folding it into standard papers.
+
+**Primary keys are UUIDs** on every table except `questions` (which keeps
+the stable 1–319 integer `id` from the source JSON, set explicitly by the
+import script). Don't `Number()`-coerce `exam_types.id`, `exam_sessions.id`,
+or `exam_answers.id` anywhere — that silently produces `NaN` and broke
+session lookups once already.
 
 - `exam_types` — id, slug, name, question_count, is_active (lets an exam
-  type exist but stay hidden — e.g. Professional until its bank is ready)
+  type exist but stay hidden — e.g. Professional until its bank is ready),
+  `scenarios_drawn`, `scenarios_total`, `domain_count` (structural fields
+  the frontend composes into each tile's description sentence on the Take
+  Exam page at render time, e.g. "A 60-question timed paper drawn from 4
+  of 6 official scenarios, weighted across all five domains" — no
+  hand-written description copy is stored, so it stays correct
+  automatically if these numbers change; see
+  `frontend/src/lib/examShape.ts`)
 - `questions` — id, exam_type_id, domain, domain_name, task_statement,
   scenario, question_text, option_a–d, correct_answer, rationale,
   is_active (soft-retire, never hard-delete, so old sessions stay
@@ -128,6 +168,26 @@ set manually via SQL after their first login. Capabilities:
   model) — don't wait until answer time to capture the snapshot.
 - Every question is single-correct-answer, 4 options, no partial credit,
   no per-question weighting — every question counts equally.
+- **Passing threshold: 72%** (`PASSING_THRESHOLD_PCT` in
+  `backend/src/lib/examConstants.ts`) — a product decision, not derived
+  from anything in the schema. Computed server-side and included in every
+  session API response; the frontend never hardcodes its own copy.
+- **Early submit is allowed** — a user can complete a session with
+  unanswered questions; any question still unanswered at completion scores
+  as incorrect (same rule the abandonment sweep will apply, applied here
+  to manual early-submit too).
+- **In-progress cap: 5 per exam type** (`MAX_IN_PROGRESS_PER_EXAM_TYPE`) —
+  enforced server-side in `POST /exam-sessions` (409 if at the cap); the
+  frontend also disables "Start new exam" proactively once it sees 5, but
+  that's UX only, not the actual enforcement.
+- **Domain-practice mode** — `POST /exam-sessions` accepts
+  `{ mode: 'domain-practice', domain }` to draw a paper from a single
+  domain only (skips the scenario draw and weighting), used by the
+  "Practice this domain" CTA on Weak areas / the domain drilldown.
+- **Deleting sessions** — only `in_progress` sessions can be deleted
+  (`DELETE /exam-sessions/:id`, 403 otherwise, enforced server-side); the
+  route deletes the session's `exam_answers` rows first, then the
+  `exam_sessions` row, rather than relying on an unverified FK cascade.
 
 ## AI evaluation feature
 Triggered automatically after every 5th completed session. Backend
