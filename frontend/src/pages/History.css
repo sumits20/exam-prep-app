@@ -46,14 +46,47 @@
 
 .history__table-wrap {
   padding: 0;
-  overflow: hidden;
+  /* auto (not hidden) so the table can scroll horizontally in its own
+     container on narrow-but-not-mobile widths instead of clipping columns —
+     `auto` still clips square table corners to the card's border-radius the
+     same way `hidden` did, since a mixed overflow-x/overflow-y pair resolves
+     the other axis to `auto` per spec. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
 .history__table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   font-family: var(--font-body);
   font-size: 0.88rem;
+}
+
+/* Actions column stays reachable while scrolling horizontally instead of
+   disappearing off the right edge. No shadow/divider here — box-shadow is a
+   static style with no way to key off actual scroll state in plain CSS, so
+   it rendered as a permanent floating-looking edge even on desktop widths
+   where the table never actually needs to scroll. A solid matching
+   background is enough to keep the column legible once it does need to. */
+.history__table th:last-child,
+.history__table td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+}
+
+.history__table th:last-child {
+  background: var(--app-surface-raised);
+}
+
+.history__table td:last-child {
+  background: var(--app-surface);
+}
+
+.history__row--clickable:hover td:last-child {
+  background: var(--app-surface-raised);
 }
 
 .history__table th {
@@ -97,20 +130,29 @@
 .history__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.history__continue,
+.history__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease-draft);
 }
 
 .history__continue {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.75rem;
   color: var(--app-accent-fg);
   background: var(--app-accent);
-  border: none;
-  border-radius: 999px;
-  padding: 0.35rem 0.75rem;
-  cursor: pointer;
-  transition: opacity 0.2s var(--ease-draft);
 }
 
 .history__continue:hover {
@@ -118,16 +160,8 @@
 }
 
 .history__delete {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.75rem;
   color: var(--app-error);
   background: var(--app-error-bg);
-  border: none;
-  border-radius: 999px;
-  padding: 0.35rem 0.75rem;
-  cursor: pointer;
-  transition: opacity 0.2s var(--ease-draft);
 }
 
 .history__delete:hover:not(:disabled) {
@@ -137,4 +171,81 @@
 .history__delete:disabled {
   cursor: progress;
   opacity: 0.6;
+}
+
+/* ---- Mobile card layout ----
+   Below 720px the table (even with horizontal scroll + a sticky actions
+   column) gets cramped and scroll-to-see-actions is worse UX than just
+   restructuring the same data as cards — matches the card list pattern
+   already used on ExamPicker/WeakAreas. Both the table and the card list
+   render from the same `sessions` array; only one is ever visible at a
+   time via this breakpoint, so nothing is duplicated on screen. */
+.history__cards {
+  display: none;
+}
+
+.history__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.history__card--clickable {
+  cursor: pointer;
+}
+
+.history__card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.history__card-date {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--app-text-muted);
+}
+
+.history__card-type {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--app-text-primary);
+}
+
+.history__card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.history__card-duration {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--app-text-muted);
+}
+
+.history__card-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.history__card-actions .history__continue,
+.history__card-actions .history__delete {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .history__table-wrap {
+    display: none;
+  }
+
+  .history__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 }

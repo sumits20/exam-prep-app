@@ -41,6 +41,12 @@ export function History() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load history'));
   }, [session.access_token, examType, passFail, from, to, sort]);
 
+  function targetFor(s: HistorySession): string | null {
+    if (s.status === 'completed') return `/history/${s.id}`;
+    if (s.status === 'in_progress') return `/exam/${s.id}`;
+    return null;
+  }
+
   async function handleDelete(s: HistorySession) {
     const confirmed = window.confirm(
       `Delete this in-progress exam session from ${formatDate(s.startedAt)}? This cannot be undone.`
@@ -114,65 +120,118 @@ export function History() {
       {sessions && sessions.length === 0 && <p className="history__empty">No exam sessions yet.</p>}
 
       {sessions && sessions.length > 0 && (
-        <div className="card--raised history__table-wrap">
-          <table className="history__table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Exam type</th>
-                <th>Score</th>
-                <th>Duration</th>
-                <th>Status</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((s) => {
-                const target = s.status === 'completed' ? `/history/${s.id}` : s.status === 'in_progress' ? `/exam/${s.id}` : null;
-                return (
-                  <tr
-                    key={s.id}
-                    className={`history__row${target ? ' history__row--clickable' : ''}`}
-                    onClick={target ? () => navigate(target) : undefined}
-                  >
-                    <td>{formatDate(s.startedAt)}</td>
-                    <td>{s.examTypeName ?? '—'}</td>
-                    <td>{s.score !== null ? <ScoreBadge score={s.score} passed={!!s.passed} /> : '—'}</td>
-                    <td>{formatDuration(s.durationSeconds)}</td>
-                    <td className="history__status">{s.status.replace('_', ' ')}</td>
-                    <td className="history__actions">
-                      {s.status === 'in_progress' && (
-                        <>
-                          <button
-                            type="button"
-                            className="history__continue"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/exam/${s.id}`);
-                            }}
-                          >
-                            Continue
-                          </button>
-                          <button
-                            type="button"
-                            className="history__delete"
-                            disabled={deletingId === s.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(s);
-                            }}
-                          >
-                            {deletingId === s.id ? 'Deleting…' : 'Delete'}
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="card--raised history__table-wrap">
+            <table className="history__table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Exam type</th>
+                  <th>Score</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s) => {
+                  const target = targetFor(s);
+                  return (
+                    <tr
+                      key={s.id}
+                      className={`history__row${target ? ' history__row--clickable' : ''}`}
+                      onClick={target ? () => navigate(target) : undefined}
+                    >
+                      <td>{formatDate(s.startedAt)}</td>
+                      <td>{s.examTypeName ?? '—'}</td>
+                      <td>{s.score !== null ? <ScoreBadge score={s.score} passed={!!s.passed} /> : '—'}</td>
+                      <td>{formatDuration(s.durationSeconds)}</td>
+                      <td className="history__status">{s.status.replace('_', ' ')}</td>
+                      <td className="history__actions">
+                        {s.status === 'in_progress' && (
+                          <>
+                            <button
+                              type="button"
+                              className="history__continue"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/exam/${s.id}`);
+                              }}
+                            >
+                              Continue
+                            </button>
+                            <button
+                              type="button"
+                              className="history__delete"
+                              disabled={deletingId === s.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(s);
+                              }}
+                            >
+                              {deletingId === s.id ? 'Deleting…' : 'Delete'}
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="history__cards">
+            {sessions.map((s) => {
+              const target = targetFor(s);
+              return (
+                <div
+                  key={s.id}
+                  className={`card--raised history__card${target ? ' history__card--clickable' : ''}`}
+                  onClick={target ? () => navigate(target) : undefined}
+                >
+                  <div className="history__card-top">
+                    <span className="history__card-date">{formatDate(s.startedAt)}</span>
+                    <span className="history__status">{s.status.replace('_', ' ')}</span>
+                  </div>
+
+                  <span className="history__card-type">{s.examTypeName ?? '—'}</span>
+
+                  <div className="history__card-meta">
+                    {s.score !== null ? <ScoreBadge score={s.score} passed={!!s.passed} /> : <span>—</span>}
+                    <span className="history__card-duration">{formatDuration(s.durationSeconds)}</span>
+                  </div>
+
+                  {s.status === 'in_progress' && (
+                    <div className="history__card-actions">
+                      <button
+                        type="button"
+                        className="history__continue"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/exam/${s.id}`);
+                        }}
+                      >
+                        Continue
+                      </button>
+                      <button
+                        type="button"
+                        className="history__delete"
+                        disabled={deletingId === s.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(s);
+                        }}
+                      >
+                        {deletingId === s.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
