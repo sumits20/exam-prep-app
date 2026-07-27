@@ -25,7 +25,7 @@ export function NavShell() {
   return (
     <div className="nav-shell">
       <header className="nav-shell__header">
-        <span className="nav-shell__brand">Architect &middot; Foundations</span>
+        <span className="nav-shell__brand">Claude Certification</span>
         <nav className="nav-shell__tabs">
           {TABS.map((tab) => (
             <NavLink
