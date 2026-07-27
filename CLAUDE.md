@@ -44,9 +44,14 @@ performance by domain and scenario and suggests study topics.
 - **Design system**: the app shell (everything past login) uses its own
   `--app-*` token set in `frontend/src/styles/index.css`, light as the
   default theme with a `[data-theme='dark']` override block and a
-  nav-bar toggle (persisted to `localStorage`). This is intentionally
-  separate from Login's permanent cyanotype/blueprint splash tokens
-  (`--bg-void`, `--line-cyan`, etc.), which don't change with the toggle.
+  nav-bar toggle (persisted to `localStorage`). The public marketing
+  homepage (`Login.tsx`, at `/`) also uses this light `--app-*` system now
+  — it needed to read as a real landing page for Google OAuth branding
+  verification, not a standalone splash screen. The permanent cyanotype/
+  blueprint tokens (`--bg-void`, `--line-cyan`, etc.) still exist and are
+  used by the public Privacy Policy / Terms of Service pages, which
+  weren't part of that rework — those two are visually inconsistent with
+  the new light homepage today; unify them if that becomes noticeable.
 
 ## Design mandate — READ THIS BEFORE WRITING ANY UI CODE
 Do not default to generic AI-generated aesthetics: no default Inter font,
