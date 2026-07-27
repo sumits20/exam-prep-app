@@ -108,7 +108,7 @@ export function PrivacyPolicy() {
           <h2>Contact</h2>
           <p>
             Questions about this policy, or requests regarding your data, can be sent to{' '}
-            <span className="legal-doc__placeholder">[your contact email]</span>.
+            support@examowl.co.uk.
           </p>
         </div>
 

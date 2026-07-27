@@ -103,16 +103,14 @@ export function TermsOfService() {
         <div className="legal-doc__section">
           <h2>11. Governing law</h2>
           <p>
-            These terms are governed by the laws of{' '}
-            <span className="legal-doc__placeholder">[your governing jurisdiction, e.g. England and Wales]</span>.
+            These terms are governed by the laws of England and Wales.
           </p>
         </div>
 
         <div className="legal-doc__section">
           <h2>12. Contact</h2>
           <p>
-            Questions about these terms can be sent to{' '}
-            <span className="legal-doc__placeholder">[your contact email]</span>.
+            Questions about these terms can be sent to support@examowl.co.uk.
           </p>
         </div>
 
