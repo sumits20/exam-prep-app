@@ -1,58 +1,63 @@
 /* Shared chrome for the two public legal pages (Privacy Policy, Terms of
-   Service) — reuses Login's permanent cyanotype/blueprint tokens rather than
-   the authenticated app-shell's --app-* tokens, since both pages live in the
-   same pre-auth, publicly-crawlable realm as Login. */
+   Service) — uses the same light --app-* app-shell system as the rest of
+   the product (including the marketing homepage), not a standalone look. */
 
 .legal-doc {
   min-height: 100vh;
-  background: var(--bg-void);
-  color: var(--text-primary);
+  background: var(--app-bg);
+  color: var(--app-text-primary);
   padding: 3rem 1.5rem 5rem;
 }
 
 .legal-doc__inner {
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  box-shadow: var(--app-shadow);
+  padding: 2.5rem clamp(1.5rem, 5vw, 3rem) 3rem;
 }
 
 .legal-doc__back {
   display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  color: var(--line-cyan);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--app-text-muted);
   text-decoration: none;
   margin-bottom: 2rem;
 }
 
 .legal-doc__back:hover {
+  color: var(--app-text-primary);
   text-decoration: underline;
 }
 
 .legal-doc__eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.24em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--line-cyan);
-  margin: 0 0 1rem;
+  color: var(--app-accent);
+  margin: 0 0 0.75rem;
 }
 
 .legal-doc__title {
   font-family: var(--font-display);
-  font-weight: 900;
-  font-size: clamp(1.9rem, 5vw, 2.75rem);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   letter-spacing: -0.01em;
-  text-transform: uppercase;
-  line-height: 1.05;
+  line-height: 1.1;
   margin: 0 0 0.5rem;
 }
 
 .legal-doc__updated {
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 400;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--app-text-muted);
   margin: 0 0 2.5rem;
 }
 
@@ -62,19 +67,19 @@
 
 .legal-doc__section h2 {
   font-family: var(--font-body);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.05rem;
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin: 0 0 0.75rem;
 }
 
 .legal-doc__section p,
 .legal-doc__section li {
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 400;
   font-size: 0.92rem;
   line-height: 1.65;
-  color: var(--text-muted);
+  color: var(--app-text-muted);
 }
 
 .legal-doc__section p {
@@ -91,27 +96,34 @@
 }
 
 .legal-doc__section strong {
-  color: var(--text-primary);
-  font-weight: 500;
+  color: var(--app-text-primary);
+  font-weight: 600;
+}
+
+.legal-doc__section a {
+  color: var(--app-accent);
 }
 
 .legal-doc__placeholder {
-  color: var(--seal-amber);
+  color: var(--app-cta);
+  font-weight: 500;
 }
 
 .legal-doc__footer {
   margin-top: 3rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--line-cyan-dim);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+  border-top: 1px solid var(--app-border);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.82rem;
 }
 
 .legal-doc__footer a {
-  color: var(--line-cyan);
+  color: var(--app-text-muted);
   text-decoration: none;
 }
 
 .legal-doc__footer a:hover {
+  color: var(--app-text-primary);
   text-decoration: underline;
 }

@@ -1,20 +1,4 @@
 :root {
-  color-scheme: dark;
-
-  /* Login-only tokens — the splash screen keeps its own permanent cyanotype
-     look regardless of the app-shell theme toggle below. */
-  --bg-void: #0b1220;
-  --bg-panel: #121b30;
-  --bg-panel-raised: #172441;
-  --line-cyan: #5fd4e8;
-  --line-cyan-dim: rgba(95, 212, 232, 0.16);
-  --seal-amber: #e2a23b;
-  --seal-amber-dim: rgba(226, 162, 59, 0.35);
-  --text-primary: #eaf3f8;
-  --text-muted: #7891ac;
-  --error: #e8615f;
-  --success: #5fd48f;
-
   --font-display: 'Big Shoulders Display', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -100,8 +84,8 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg-void);
-  color: var(--text-primary);
+  background: var(--app-bg);
+  color: var(--app-text-primary);
   font-family: var(--font-body);
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
@@ -112,7 +96,7 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--line-cyan);
+  outline: 2px solid var(--app-accent);
   outline-offset: 2px;
 }
 

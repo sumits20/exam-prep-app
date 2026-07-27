@@ -41,17 +41,16 @@ performance by domain and scenario and suggests study topics.
   pattern callouts), `WeakAreas`, `DomainDrilldown`.
 - **Not yet built**: admin console, AI evaluation feature, the
   abandoned-session cron sweep.
-- **Design system**: the app shell (everything past login) uses its own
-  `--app-*` token set in `frontend/src/styles/index.css`, light as the
-  default theme with a `[data-theme='dark']` override block and a
-  nav-bar toggle (persisted to `localStorage`). The public marketing
-  homepage (`Login.tsx`, at `/`) also uses this light `--app-*` system now
-  — it needed to read as a real landing page for Google OAuth branding
-  verification, not a standalone splash screen. The permanent cyanotype/
-  blueprint tokens (`--bg-void`, `--line-cyan`, etc.) still exist and are
-  used by the public Privacy Policy / Terms of Service pages, which
-  weren't part of that rework — those two are visually inconsistent with
-  the new light homepage today; unify them if that becomes noticeable.
+- **Design system**: one light `--app-*` token set in
+  `frontend/src/styles/index.css` for the whole app — the authenticated
+  shell, the public marketing homepage (`Login.tsx`, at `/`), and the
+  public Privacy Policy / Terms of Service pages all share it, plus a
+  `[data-theme='dark']` override block and nav-bar toggle (persisted to
+  `localStorage`) for the authenticated shell. The old dark cyanotype/
+  blueprint splash tokens (`--bg-void`, `--line-cyan`, etc.) that Login
+  used to keep permanently separate from the app-shell theme were removed
+  entirely once nothing referenced them anymore — don't reintroduce a
+  second token set for pre-auth pages; extend `--app-*` instead.
 
 ## Design mandate — READ THIS BEFORE WRITING ANY UI CODE
 Do not default to generic AI-generated aesthetics: no default Inter font,
