@@ -1,9 +1,11 @@
 // Aesthetic direction: this is the public marketing/sign-in page, so it uses the
 // same light app-shell system as the rest of the product (--app-* tokens,
-// .card--raised, .domain-chip, .eyebrow) rather than a separate splash look — the
-// signature element is the domain-weighting bar below, built from the paper
-// generator's real weights (see backend exam_domains), so the hero makes a
-// concrete, checkable claim instead of generic marketing art.
+// .card--raised, .domain-chip, .eyebrow) rather than a separate splash look.
+// The hero is intentionally exam-program-agnostic (ExamOwl supports multiple
+// certification tracks) — the Claude-specific domain-weighting bar, built from
+// the paper generator's real weights (see backend exam_domains), lives in the
+// "Available exams" section instead, scoped to the one track that's actually
+// live, not implied to be a platform-wide mechanic.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -16,6 +18,27 @@ const DOMAIN_WEIGHTS: { domain: number; pct: number }[] = [
   { domain: 3, pct: 20 },
   { domain: 4, pct: 20 },
   { domain: 5, pct: 15 },
+];
+
+const EXAM_TILES = [
+  {
+    key: 'claude',
+    status: 'available' as const,
+    name: 'Claude Certification',
+    tagline: 'Claude Certified Architect — Foundations, Professional',
+  },
+  {
+    key: 'cloud',
+    status: 'soon' as const,
+    name: 'Cloud certifications',
+    tagline: 'AWS, Azure, and GCP associate-level practice papers',
+  },
+  {
+    key: 'pm',
+    status: 'soon' as const,
+    name: 'PM certifications',
+    tagline: 'PMP and Scrum-focused scenario practice',
+  },
 ];
 
 const STATS = [
@@ -88,13 +111,12 @@ export function Login() {
 
       <main>
         <section className={`landing__hero${ready ? ' landing__hero--ready' : ''}`}>
-          <p className="eyebrow">Practice exams for Claude Certification</p>
-          <h1 className="landing__headline">Master the Claude Certified Architect exam</h1>
+          <p className="eyebrow">Practice exams for professional certifications</p>
+          <h1 className="landing__headline">Master your next certification exam</h1>
           <p className="landing__subhead">
-            ExamOwl is a practice-exam platform for the Claude Certification program — starting with
-            the Claude Certified Architect &ndash; Foundations track, with more tracks planned. Take
-            realistic, scenario-based practice papers weighted exactly like the real exam, so a good
-            score actually means something.
+            ExamOwl is a practice-exam platform for professional certification exams — realistic,
+            scenario-based practice questions, exam history tracking, and weak-area analysis to help you
+            prepare with confidence.
           </p>
 
           <button type="button" className="btn btn--primary landing__cta" onClick={handleSignIn} disabled={isSigningIn}>
@@ -107,9 +129,46 @@ export function Login() {
               {error}
             </p>
           )}
+        </section>
+
+        <section className="landing__section">
+          <p className="eyebrow">Available exams</p>
+          <h2 className="landing__section-heading">Choose your certification track</h2>
+          <p className="landing__section-body">
+            ExamOwl is built to support multiple certification programs under one practice experience —
+            realistic papers, tracked history, and weak-area analysis, whichever track you're preparing
+            for. Claude Certification is live today; more programs are on the way.
+          </p>
+
+          <div className="landing__exam-tiles">
+            {EXAM_TILES.map((tile) =>
+              tile.status === 'available' ? (
+                <button
+                  key={tile.key}
+                  type="button"
+                  className="card--raised landing__exam-tile landing__exam-tile--available"
+                  onClick={handleSignIn}
+                  disabled={isSigningIn}
+                >
+                  <span className="landing__exam-tile-badge landing__exam-tile-badge--available">
+                    Available now
+                  </span>
+                  <h3 className="landing__exam-tile-name">{tile.name}</h3>
+                  <p className="landing__exam-tile-tagline">{tile.tagline}</p>
+                  <span className="landing__exam-tile-cta">Sign in to start &rarr;</span>
+                </button>
+              ) : (
+                <div key={tile.key} className="card--raised landing__exam-tile landing__exam-tile--soon">
+                  <span className="landing__exam-tile-badge landing__exam-tile-badge--soon">Coming soon</span>
+                  <h3 className="landing__exam-tile-name">{tile.name}</h3>
+                  <p className="landing__exam-tile-tagline">{tile.tagline}</p>
+                </div>
+              )
+            )}
+          </div>
 
           <div className="landing__weightbar-wrap">
-            <p className="landing__weightbar-label">Every practice paper is drawn to this exact domain weighting</p>
+            <p className="landing__weightbar-label">Claude Certification papers are drawn to this exact domain weighting</p>
             <div className="landing__weightbar">
               {DOMAIN_WEIGHTS.map((d) => (
                 <span
