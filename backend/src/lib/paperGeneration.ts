@@ -1,9 +1,9 @@
 import { supabase } from './supabase.js';
-import { DOMAIN_TARGETS, SCENARIOS, SCENARIOS_PER_PAPER, TOTAL_QUESTIONS } from './examConstants.js';
+import { computeDomainTargets, getExamDomains, getStandardDrawScenarios } from './examMetadata.js';
 
 export interface QuestionRow {
   id: number;
-  exam_type_id: number;
+  exam_type_id: string;
   domain: number;
   domain_name: string;
   task_statement: string;
@@ -36,11 +36,11 @@ function groupByDomain(rows: QuestionRow[]): Map<number, QuestionRow[]> {
   return byDomain;
 }
 
-export function drawScenarios(): string[] {
-  return shuffle([...SCENARIOS]).slice(0, SCENARIOS_PER_PAPER);
+export function drawScenarios(scenarios: string[], count: number): string[] {
+  return shuffle(scenarios).slice(0, count);
 }
 
-async function fetchActiveQuestions(examTypeId: number): Promise<QuestionRow[]> {
+async function fetchActiveQuestions(examTypeId: string): Promise<QuestionRow[]> {
   const { data, error } = await supabase
     .from('questions')
     .select('*')
@@ -57,18 +57,22 @@ async function fetchActiveQuestions(examTypeId: number): Promise<QuestionRow[]> 
 // Not every 4-of-6 scenario draw has enough questions in every domain to hit the exact
 // weighted targets (some scenarios are domain-heavy) — this tries an exact weighted sample
 // against a scenario draw, returning null if that specific draw can't satisfy every domain.
-function tryExactWeightedSample(pool: QuestionRow[], scenarios: string[]): QuestionRow[] | null {
+function tryExactWeightedSample(
+  pool: QuestionRow[],
+  scenarios: string[],
+  domainTargets: Record<number, number>
+): QuestionRow[] | null {
   const scenarioFiltered = pool.filter((q) => scenarios.includes(q.scenario));
   const byDomain = groupByDomain(scenarioFiltered);
 
-  for (const [domainStr, target] of Object.entries(DOMAIN_TARGETS)) {
+  for (const [domainStr, target] of Object.entries(domainTargets)) {
     if ((byDomain.get(Number(domainStr))?.length ?? 0) < target) {
       return null;
     }
   }
 
   const selected: QuestionRow[] = [];
-  for (const [domainStr, target] of Object.entries(DOMAIN_TARGETS)) {
+  for (const [domainStr, target] of Object.entries(domainTargets)) {
     const pool = byDomain.get(Number(domainStr))!;
     selected.push(...shuffle(pool).slice(0, target));
   }
@@ -78,15 +82,20 @@ function tryExactWeightedSample(pool: QuestionRow[], scenarios: string[]): Quest
 
 // Last-resort fallback for the rare case no scenario draw hits the exact weighting after many
 // tries: take everything available per domain (capped at its target) and redistribute the
-// shortfall across domains with spare capacity, so the paper still totals 60 questions.
-function fallbackWeightedSample(pool: QuestionRow[], scenarios: string[]): QuestionRow[] {
+// shortfall across domains with spare capacity, so the paper still totals totalQuestions.
+function fallbackWeightedSample(
+  pool: QuestionRow[],
+  scenarios: string[],
+  domainTargets: Record<number, number>,
+  totalQuestions: number
+): QuestionRow[] {
   const scenarioFiltered = pool.filter((q) => scenarios.includes(q.scenario));
   const byDomain = groupByDomain(scenarioFiltered);
 
   const allocation: Record<number, number> = {};
   let shortfall = 0;
 
-  for (const [domainStr, target] of Object.entries(DOMAIN_TARGETS)) {
+  for (const [domainStr, target] of Object.entries(domainTargets)) {
     const domain = Number(domainStr);
     const available = byDomain.get(domain)?.length ?? 0;
     const take = Math.min(available, target);
@@ -97,7 +106,7 @@ function fallbackWeightedSample(pool: QuestionRow[], scenarios: string[]): Quest
   while (shortfall > 0) {
     let bestDomain: number | null = null;
     let bestSpare = 0;
-    for (const domainStr of Object.keys(DOMAIN_TARGETS)) {
+    for (const domainStr of Object.keys(domainTargets)) {
       const domain = Number(domainStr);
       const spare = (byDomain.get(domain)?.length ?? 0) - allocation[domain];
       if (spare > bestSpare) {
@@ -108,7 +117,7 @@ function fallbackWeightedSample(pool: QuestionRow[], scenarios: string[]): Quest
     if (bestDomain === null) {
       throw new Error(
         `Not enough active questions across scenarios [${scenarios.join(', ')}] to build a ` +
-          `${TOTAL_QUESTIONS}-question paper (short by ${shortfall})`
+          `${totalQuestions}-question paper (short by ${shortfall})`
       );
     }
     allocation[bestDomain] += 1;
@@ -124,24 +133,47 @@ function fallbackWeightedSample(pool: QuestionRow[], scenarios: string[]): Quest
 }
 
 export async function generateStandardPaper(
-  examTypeId: number
+  examTypeId: string
 ): Promise<{ scenarios: string[]; questions: QuestionRow[] }> {
-  const pool = await fetchActiveQuestions(examTypeId);
+  const [pool, standardScenarios, domains, examType] = await Promise.all([
+    fetchActiveQuestions(examTypeId),
+    getStandardDrawScenarios(examTypeId),
+    getExamDomains(examTypeId),
+    fetchExamTypeShape(examTypeId),
+  ]);
+
+  const totalQuestions = examType.questionCount;
+  const scenariosPerPaper = examType.scenariosDrawn;
+  const domainTargets = computeDomainTargets(domains, totalQuestions);
 
   const MAX_ATTEMPTS = 40;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const scenarios = drawScenarios();
-    const questions = tryExactWeightedSample(pool, scenarios);
+    const scenarios = drawScenarios(standardScenarios, scenariosPerPaper);
+    const questions = tryExactWeightedSample(pool, scenarios, domainTargets);
     if (questions) {
       return { scenarios, questions };
     }
   }
 
-  const scenarios = drawScenarios();
-  return { scenarios, questions: fallbackWeightedSample(pool, scenarios) };
+  const scenarios = drawScenarios(standardScenarios, scenariosPerPaper);
+  return { scenarios, questions: fallbackWeightedSample(pool, scenarios, domainTargets, totalQuestions) };
 }
 
-export async function sampleDomainQuestions(examTypeId: number, domain: number): Promise<QuestionRow[]> {
+async function fetchExamTypeShape(examTypeId: string): Promise<{ questionCount: number; scenariosDrawn: number }> {
+  const { data, error } = await supabase
+    .from('exam_types')
+    .select('question_count, scenarios_drawn')
+    .eq('id', examTypeId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Failed to fetch exam_types row for ${examTypeId}: ${error?.message ?? 'not found'}`);
+  }
+
+  return { questionCount: data.question_count, scenariosDrawn: data.scenarios_drawn };
+}
+
+export async function sampleDomainQuestions(examTypeId: string, domain: number): Promise<QuestionRow[]> {
   const { data, error } = await supabase
     .from('questions')
     .select('*')
@@ -158,5 +190,8 @@ export async function sampleDomainQuestions(examTypeId: number, domain: number):
     throw new Error(`No active questions found for domain ${domain}`);
   }
 
-  return shuffle(rows).slice(0, Math.min(TOTAL_QUESTIONS, rows.length));
+  // Cap a domain-practice session at the same size as a standard paper for this exam type,
+  // rather than a hardcoded 60 — mirrors the exam type's own question_count.
+  const { questionCount } = await fetchExamTypeShape(examTypeId);
+  return shuffle(rows).slice(0, Math.min(questionCount, rows.length));
 }

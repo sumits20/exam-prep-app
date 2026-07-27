@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthSession } from '../lib/AuthContext';
-import { deleteExamSession, getExamHistory } from '../lib/api';
+import { deleteExamSession, getExamHistory, getExamTypes } from '../lib/api';
 import { formatDate, formatDuration } from '../lib/format';
 import { ScoreBadge } from '../components/ScoreBadge';
-import type { HistorySession } from '../lib/types';
+import type { ExamType, HistorySession } from '../lib/types';
 import './History.css';
 
 type PassFail = '' | 'pass' | 'fail';
@@ -14,7 +14,9 @@ export function History() {
   const session = useAuthSession();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<HistorySession[] | null>(null);
+  const [examTypes, setExamTypes] = useState<ExamType[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [examType, setExamType] = useState('');
   const [passFail, setPassFail] = useState<PassFail>('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -22,7 +24,14 @@ export function History() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
+    getExamTypes(session.access_token)
+      .then((res) => setExamTypes(res.examTypes))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load exam types'));
+  }, [session.access_token]);
+
+  useEffect(() => {
     getExamHistory(session.access_token, {
+      examType: examType || undefined,
       passFail: passFail || undefined,
       from: from || undefined,
       to: to || undefined,
@@ -30,7 +39,7 @@ export function History() {
     })
       .then((res) => setSessions(res.sessions))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load history'));
-  }, [session.access_token, passFail, from, to, sort]);
+  }, [session.access_token, examType, passFail, from, to, sort]);
 
   async function handleDelete(s: HistorySession) {
     const confirmed = window.confirm(
@@ -56,6 +65,19 @@ export function History() {
       <h1 className="history__headline">Exam history</h1>
 
       <div className="history__filters">
+        {examTypes && examTypes.length > 1 && (
+          <label className="history__filter">
+            <span>Exam type</span>
+            <select value={examType} onChange={(e) => setExamType(e.target.value)}>
+              <option value="">All</option>
+              {examTypes.map((type) => (
+                <option key={type.id} value={type.slug}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="history__filter">
           <span>Result</span>
           <select value={passFail} onChange={(e) => setPassFail(e.target.value as PassFail)}>

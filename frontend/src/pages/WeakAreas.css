@@ -22,6 +22,41 @@
   color: var(--app-text-muted);
 }
 
+.weak-areas__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.weak-areas__tab {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--app-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  transition: color 0.2s var(--ease-draft), background 0.2s var(--ease-draft);
+}
+
+.weak-areas__tab:hover {
+  color: var(--app-text-primary);
+  background: var(--app-surface-raised);
+}
+
+.weak-areas__tab--active {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+  font-weight: 700;
+}
+
+.weak-areas__tab--active:hover {
+  color: var(--app-accent-fg);
+  background: var(--app-accent);
+}
+
 .weak-areas__list {
   display: flex;
   flex-direction: column;

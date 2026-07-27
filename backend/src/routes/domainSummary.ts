@@ -1,17 +1,48 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { supabase } from '../lib/supabase.js';
-import { DOMAIN_NAMES } from '../lib/examConstants.js';
+import { getDomainNameMap, getExamDomains } from '../lib/examMetadata.js';
 
 export const domainSummaryRouter = Router();
 
+// Domain numbers aren't comparable across exam types (domain 1 in one exam type's
+// weighting has nothing to do with domain 1 in another's), so every summary/drilldown
+// query is scoped to a single exam type resolved from this required slug param.
+async function resolveExamType(
+  examTypeSlug: string | undefined
+): Promise<{ id: string; domainCount: number } | { error: number; message: string }> {
+  if (!examTypeSlug) {
+    return { error: 400, message: 'examType query param is required' };
+  }
+
+  const { data, error } = await supabase
+    .from('exam_types')
+    .select('id, domain_count')
+    .eq('slug', examTypeSlug)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { error: 404, message: `Unknown exam type: ${examTypeSlug}` };
+  }
+
+  return { id: data.id, domainCount: data.domain_count };
+}
+
 domainSummaryRouter.get('/', requireAuth, async (req, res) => {
   const userId = req.user!.id;
+  const { examType: examTypeSlug } = req.query as Record<string, string | undefined>;
+
+  const examType = await resolveExamType(examTypeSlug);
+  if ('error' in examType) {
+    res.status(examType.error).json({ error: examType.message });
+    return;
+  }
 
   const { data: sessions, error } = await supabase
     .from('exam_sessions')
     .select('id, completed_at, domain_breakdown')
     .eq('user_id', userId)
+    .eq('exam_type_id', examType.id)
     .eq('status', 'completed')
     .order('completed_at', { ascending: true });
 
@@ -43,16 +74,17 @@ domainSummaryRouter.get('/', requireAuth, async (req, res) => {
     }
   }
 
-  const domains = Object.entries(DOMAIN_NAMES).map(([domainStr, domainName]) => {
-    const domain = Number(domainStr);
-    const t = totals.get(domain) ?? { correct: 0, total: 0 };
+  const examDomains = await getExamDomains(examType.id);
+
+  const domains = examDomains.map(({ domainNumber, name }) => {
+    const t = totals.get(domainNumber) ?? { correct: 0, total: 0 };
     return {
-      domain,
-      domainName,
+      domain: domainNumber,
+      domainName: name,
       totalAttempted: t.total,
       totalCorrect: t.correct,
       accuracyPct: t.total === 0 ? null : Math.round((100 * t.correct) / t.total),
-      trend: trends.get(domain) ?? [],
+      trend: trends.get(domainNumber) ?? [],
     };
   });
 
@@ -69,17 +101,27 @@ domainSummaryRouter.get('/', requireAuth, async (req, res) => {
 
 domainSummaryRouter.get('/:domain/questions', requireAuth, async (req, res) => {
   const userId = req.user!.id;
+  const { examType: examTypeSlug } = req.query as Record<string, string | undefined>;
   const domain = Number(req.params.domain);
 
-  if (!domain || domain < 1 || domain > 5) {
-    res.status(400).json({ error: 'domain must be between 1 and 5' });
+  const examType = await resolveExamType(examTypeSlug);
+  if ('error' in examType) {
+    res.status(examType.error).json({ error: examType.message });
     return;
   }
+
+  if (!domain || domain < 1 || domain > examType.domainCount) {
+    res.status(400).json({ error: `domain must be between 1 and ${examType.domainCount}` });
+    return;
+  }
+
+  const domainNames = await getDomainNameMap(examType.id);
 
   const { data: sessions, error: sessionsError } = await supabase
     .from('exam_sessions')
     .select('id')
     .eq('user_id', userId)
+    .eq('exam_type_id', examType.id)
     .eq('status', 'completed');
 
   if (sessionsError) {
@@ -90,7 +132,7 @@ domainSummaryRouter.get('/:domain/questions', requireAuth, async (req, res) => {
 
   const sessionIds = (sessions ?? []).map((s) => s.id);
   if (sessionIds.length === 0) {
-    res.json({ domain, domainName: DOMAIN_NAMES[domain], items: [] });
+    res.json({ domain, domainName: domainNames[domain], items: [] });
     return;
   }
 
@@ -110,13 +152,13 @@ domainSummaryRouter.get('/:domain/questions', requireAuth, async (req, res) => {
 
   res.json({
     domain,
-    domainName: DOMAIN_NAMES[domain],
+    domainName: domainNames[domain],
     items: (answers ?? []).map((a) => ({
       examAnswerId: a.id,
       sessionId: a.session_id,
       questionId: a.question_id,
       domain: a.domain,
-      domainName: DOMAIN_NAMES[a.domain],
+      domainName: domainNames[a.domain],
       scenario: a.scenario,
       questionText: a.question_text,
       options: a.options,

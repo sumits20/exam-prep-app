@@ -8,7 +8,7 @@ import type { DomainQuestionsResponse } from '../lib/types';
 import './DomainDrilldown.css';
 
 export function DomainDrilldown() {
-  const { domain: domainParam } = useParams();
+  const { examType: examTypeSlug, domain: domainParam } = useParams();
   const domain = Number(domainParam);
   const session = useAuthSession();
   const navigate = useNavigate();
@@ -17,16 +17,18 @@ export function DomainDrilldown() {
   const [practicing, setPracticing] = useState(false);
 
   useEffect(() => {
-    getDomainQuestions(session.access_token, domain)
+    if (!examTypeSlug) return;
+    getDomainQuestions(session.access_token, examTypeSlug, domain)
       .then(setData)
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load domain questions'));
-  }, [domain, session.access_token]);
+  }, [domain, examTypeSlug, session.access_token]);
 
   async function handlePractice() {
+    if (!examTypeSlug) return;
     setError(null);
     setPracticing(true);
     try {
-      const res = await startDomainPractice(session.access_token, domain);
+      const res = await startDomainPractice(session.access_token, examTypeSlug, domain);
       navigate(`/exam/${res.session.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start domain practice');

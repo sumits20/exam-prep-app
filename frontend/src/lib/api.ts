@@ -102,22 +102,22 @@ export function getSessionReview(accessToken: string, sessionId: string) {
   return authedFetch<SessionReviewResponse>(`/exam-sessions/${sessionId}/review`, accessToken);
 }
 
-export function getDomainSummary(accessToken: string) {
-  return authedFetch<DomainSummaryResponse>('/domain-summary', accessToken);
+// Domain numbers aren't comparable across exam types, so the summary/drilldown are
+// always scoped to one exam type's slug.
+export function getDomainSummary(accessToken: string, examTypeSlug: string) {
+  return authedFetch<DomainSummaryResponse>(
+    `/domain-summary?examType=${encodeURIComponent(examTypeSlug)}`,
+    accessToken
+  );
 }
 
-export function getDomainQuestions(accessToken: string, domain: number) {
-  return authedFetch<DomainQuestionsResponse>(`/domain-summary/${domain}/questions`, accessToken);
+export function getDomainQuestions(accessToken: string, examTypeSlug: string, domain: number) {
+  return authedFetch<DomainQuestionsResponse>(
+    `/domain-summary/${domain}/questions?examType=${encodeURIComponent(examTypeSlug)}`,
+    accessToken
+  );
 }
 
-// Only one exam type is active today, so domain-practice always targets it —
-// resolves the slug first rather than hardcoding it, so a second active exam
-// type wouldn't silently mis-target this call.
-export async function startDomainPractice(accessToken: string, domain: number) {
-  const { examTypes } = await getExamTypes(accessToken);
-  const examType = examTypes[0];
-  if (!examType) {
-    throw new Error('No active exam type available');
-  }
-  return createExamSession(accessToken, { examTypeSlug: examType.slug, mode: 'domain-practice', domain });
+export function startDomainPractice(accessToken: string, examTypeSlug: string, domain: number) {
+  return createExamSession(accessToken, { examTypeSlug, mode: 'domain-practice', domain });
 }

@@ -57,7 +57,7 @@ export default function App() {
             <Route path="/history" element={<History />} />
             <Route path="/history/:sessionId" element={<SessionReview />} />
             <Route path="/weak-areas" element={<WeakAreas />} />
-            <Route path="/weak-areas/:domain" element={<DomainDrilldown />} />
+            <Route path="/weak-areas/:examType/:domain" element={<DomainDrilldown />} />
             <Route path="*" element={<Navigate to="/exam" replace />} />
           </Route>
         </Routes>

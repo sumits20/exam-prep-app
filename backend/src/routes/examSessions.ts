@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { supabase } from '../lib/supabase.js';
-import { DOMAIN_NAMES, MAX_IN_PROGRESS_PER_EXAM_TYPE, PASSING_THRESHOLD_PCT } from '../lib/examConstants.js';
+import { MAX_IN_PROGRESS_PER_EXAM_TYPE, PASSING_THRESHOLD_PCT } from '../lib/examConstants.js';
+import { getDomainNameMap } from '../lib/examMetadata.js';
 import { generateStandardPaper, sampleDomainQuestions } from '../lib/paperGeneration.js';
 import type { QuestionRow } from '../lib/paperGeneration.js';
 
@@ -25,7 +26,7 @@ interface ExamAnswerRow {
 interface ExamSessionRow {
   id: string;
   user_id: string;
-  exam_type_id: number;
+  exam_type_id: string;
   status: 'in_progress' | 'completed' | 'abandoned';
   started_at: string;
   completed_at: string | null;
@@ -68,20 +69,20 @@ examSessionsRouter.post('/', requireAuth, async (req, res) => {
     return;
   }
 
-  if (mode === 'domain-practice' && (!domain || domain < 1 || domain > 5)) {
-    res.status(400).json({ error: 'domain (1-5) is required for domain-practice mode' });
-    return;
-  }
-
   const { data: examType, error: examTypeError } = await supabase
     .from('exam_types')
-    .select('id')
+    .select('id, domain_count')
     .eq('slug', examTypeSlug)
     .eq('is_active', true)
     .maybeSingle();
 
   if (examTypeError || !examType) {
     res.status(404).json({ error: `Unknown exam type: ${examTypeSlug}` });
+    return;
+  }
+
+  if (mode === 'domain-practice' && (!domain || domain < 1 || domain > examType.domain_count)) {
+    res.status(400).json({ error: `domain (1-${examType.domain_count}) is required for domain-practice mode` });
     return;
   }
 
@@ -194,9 +195,15 @@ examSessionsRouter.get('/', requireAuth, async (req, res) => {
   const userId = req.user!.id;
   const { examType, passFail, from, to, sort, status } = req.query as Record<string, string | undefined>;
 
+  // `!inner` is required for `.eq('exam_types.slug', ...)` to actually restrict rows —
+  // on a plain left-joined embed, filtering on the embedded table is silently a no-op.
+  // Only switch to the inner join when actually filtering, so an unfiltered request still
+  // returns every session (there's no case today where exam_types would be missing, but no
+  // reason to risk dropping rows via an inner join when nothing asked for it).
+  const embed = examType ? 'exam_types!inner(slug, name)' : 'exam_types(slug, name)';
   let query = supabase
     .from('exam_sessions')
-    .select('id, status, started_at, completed_at, score, domain_breakdown, exam_types(slug, name)')
+    .select(`id, status, started_at, completed_at, score, domain_breakdown, ${embed}`)
     .eq('user_id', userId);
 
   if (examType) {
@@ -317,6 +324,7 @@ examSessionsRouter.get('/:id', requireAuth, async (req, res) => {
     return;
   }
 
+  const domainNames = await getDomainNameMap(session.exam_type_id);
   const byQuestionId = new Map((answers as ExamAnswerRow[]).map((a) => [a.question_id, a]));
   const inProgress = session.status === 'in_progress';
 
@@ -327,7 +335,7 @@ examSessionsRouter.get('/:id', requireAuth, async (req, res) => {
       examAnswerId: a.id,
       questionId: a.question_id,
       domain: a.domain,
-      domainName: DOMAIN_NAMES[a.domain],
+      domainName: domainNames[a.domain],
       scenario: a.scenario,
       questionText: a.question_text,
       options: a.options,
@@ -571,6 +579,7 @@ examSessionsRouter.get('/:id/review', requireAuth, async (req, res) => {
     }
   }
 
+  const domainNames = await getDomainNameMap(session.exam_type_id);
   const byQuestionIdCurrent = new Map((answers as ExamAnswerRow[]).map((a) => [a.question_id, a]));
 
   const items = session.question_ids.map((qid) => {
@@ -582,7 +591,7 @@ examSessionsRouter.get('/:id/review', requireAuth, async (req, res) => {
       examAnswerId: a.id,
       questionId: a.question_id,
       domain: a.domain,
-      domainName: DOMAIN_NAMES[a.domain],
+      domainName: domainNames[a.domain],
       scenario: a.scenario,
       questionText: a.question_text,
       options: a.options,
