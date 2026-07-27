@@ -1,6 +1,8 @@
-// One-time import: /data/architect-foundations_questions.json -> `questions` table.
-// Run once after the `exam_types` row for 'architect-foundations' exists.
-// Safe to re-run: existing question ids are skipped via upsert(..., { ignoreDuplicates: true }).
+// Import: /data/architect-foundations_questions.json -> `questions` table.
+// Run once after the `exam_types` row for 'architect-foundations' exists, and re-run any
+// time the question bank JSON changes — it's a real upsert by id, so it both inserts
+// newly-added questions and updates the content of existing ones. `is_active` isn't part
+// of the upsert payload, so soft-retired questions stay retired across re-imports.
 
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
@@ -71,8 +73,7 @@ async function main() {
   const examTypeId = examType.id;
   console.log(`Resolved exam_type_id=${examTypeId} for slug='${EXAM_TYPE_SLUG}'`);
 
-  let inserted = 0;
-  let skipped = 0;
+  let upserted = 0;
   let failed = 0;
   let processed = 0;
 
@@ -95,11 +96,12 @@ async function main() {
       rationale: q.rationale,
     }));
 
-    // ignoreDuplicates: true -> ON CONFLICT (id) DO NOTHING, so re-running is a no-op
-    // for questions that already exist. Only newly inserted rows come back in `data`.
+    // A real upsert (ON CONFLICT (id) DO UPDATE) — inserts rows for new ids, and
+    // overwrites content columns for ids that already exist, so edits to existing
+    // questions in the JSON actually propagate on re-run.
     const { data, error } = await supabase
       .from('questions')
-      .upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
+      .upsert(rows, { onConflict: 'id' })
       .select('id');
 
     processed += batch.length;
@@ -108,23 +110,16 @@ async function main() {
       failed += batch.length;
       console.error(`Batch starting at question id=${batch[0].id} failed: ${error.message}`);
     } else {
-      const insertedIds = new Set((data ?? []).map((r) => r.id));
-      inserted += insertedIds.size;
-      skipped += batch.length - insertedIds.size;
+      upserted += (data ?? []).length;
     }
 
     if (processed % BATCH_SIZE === 0 || processed === questions.length) {
-      console.log(
-        `Progress: ${processed}/${questions.length} processed ` +
-          `(inserted=${inserted}, skipped=${skipped}, failed=${failed})`
-      );
+      console.log(`Progress: ${processed}/${questions.length} processed (upserted=${upserted}, failed=${failed})`);
     }
   }
 
   console.log('---');
-  console.log(
-    `Import complete: ${inserted} inserted, ${skipped} skipped (already existed), ${failed} failed.`
-  );
+  console.log(`Import complete: ${upserted} upserted, ${failed} failed.`);
 
   if (failed > 0) {
     process.exitCode = 1;

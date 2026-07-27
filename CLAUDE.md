@@ -67,8 +67,10 @@ Professional bank is just new rows, not a new file to manage) and
 queryability (filter by domain/scenario at the DB level rather than
 loading everything into memory). `data/architect-foundations_questions.json`
 is the import source (re-run `npm run import:questions` in `backend/`
-whenever it's updated — the script upserts by `id` and skips rows that
-already exist, so it's safe to re-run), not read at runtime by the app.
+whenever it's updated — the script does a real upsert by `id`, inserting new
+questions and overwriting the content of existing ones, so edits to
+questions already in the bank also propagate on re-run), not read at
+runtime by the app.
 As of the last import it holds 319 questions across the original 6 official
 scenarios plus a 7th, **General Knowledge**, which is intentionally outside
 the standard 4-of-6 scenario draw (only reachable via domain-practice mode)
