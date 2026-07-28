@@ -43,7 +43,8 @@ export function MeetTheFounder() {
             </p>
             <p>
               ExamOwl is independently built and maintained. If you have feedback or spot something
-              wrong, I'd genuinely like to hear it.
+              wrong, I'd genuinely like to hear it — reach me at{' '}
+              <a href="mailto:hello@examowl.co.uk">hello@examowl.co.uk</a>.
             </p>
             <p className="meet-founder__signature">— Sumit</p>
           </div>
