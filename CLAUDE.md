@@ -95,6 +95,11 @@ session lookups once already.
   hand-written description copy is stored, so it stays correct
   automatically if these numbers change; see
   `frontend/src/lib/examShape.ts`)
+- `exam_scenarios` — id, exam_type_id, name, include_in_standard_draw —
+  and `exam_domains` — id, exam_type_id, domain_number, name, weight_pct
+  — are what make each exam type's scenario list and domain weightings
+  per-exam-type data rather than hardcoded in application code; see
+  Paper generation below.
 - `questions` — id, exam_type_id, domain, domain_name, task_statement,
   scenario, question_text, option_a–d, correct_answer, rationale,
   is_active (soft-retire, never hard-delete, so old sessions stay
@@ -162,16 +167,25 @@ set manually via SQL after their first login. Capabilities:
   `in_progress` session older than 3 hours as `abandoned`, and scores
   every unanswered question in it as incorrect (0 marks) when computing
   the final score.
-- Paper generation: randomly select 4 of the 6 official scenarios
-  (Customer Support Resolution Agent, Code Generation with Claude Code,
-  Multi-Agent Research System, Developer Productivity with Claude,
-  Claude Code for Continuous Integration, Structured Data Extraction),
-  query `questions` filtered to those scenarios + the active exam type,
-  then sample 60, weighted approximately by the official domain
-  weightings (Domain 1: 27%, Domain 2: 18%, Domain 3: 20%, Domain 4:
-  20%, Domain 5: 15%). At session creation, snapshot each drawn
-  question's content onto its future `exam_answers` row (see Data
-  model) — don't wait until answer time to capture the snapshot.
+- Paper generation: randomly select N of M scenarios flagged
+  `include_in_standard_draw = true` in `exam_scenarios` for the exam
+  type (N = `exam_types.scenarios_drawn`, M = `scenarios_total`), query
+  `questions` filtered to those scenarios + the active exam type, then
+  sample the paper down to `question_count`, weighted per domain by
+  that domain's `exam_domains.weight_pct`. Architect Foundations'
+  specific scenario names and weightings (the 6 official scenarios plus
+  General Knowledge excluded from the standard draw, and the 27/18/20/
+  20/15% domain split) now live as backfilled data in
+  `backend/migrations/0001_exam_scenarios_domains.sql`, not in this
+  doc — adding a new exam type (e.g. Professional) means new rows in
+  `exam_scenarios`/`exam_domains`, not an edit to this file or to
+  `backend/src/lib/paperGeneration.ts`. Known gap: no CHECK constraint
+  or trigger enforces that an exam type's `exam_domains.weight_pct`
+  rows sum to 100 — verify by eye when inserting a new exam type's
+  rows until/unless such a constraint is added. At session creation,
+  snapshot each drawn question's content onto its future `exam_answers`
+  row (see Data model) — don't wait until answer time to capture the
+  snapshot.
 - Every question is single-correct-answer, 4 options, no partial credit,
   no per-question weighting — every question counts equally.
 - **Passing threshold: 72%** (`PASSING_THRESHOLD_PCT` in
