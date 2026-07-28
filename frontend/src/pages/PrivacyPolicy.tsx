@@ -114,6 +114,7 @@ export function PrivacyPolicy() {
 
         <div className="legal-doc__footer">
           <Link to="/terms">Terms of Service</Link>
+          <Link to="/meet-the-founder">Meet the Founder</Link>
         </div>
       </div>
     </div>

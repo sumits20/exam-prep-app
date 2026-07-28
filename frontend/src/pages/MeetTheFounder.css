@@ -1,0 +1,40 @@
+/* Page-specific additions on top of the shared .landing chrome (Login.css):
+   the circular profile photo (orange-accent ring, matching the CTA/badge
+   accent color used elsewhere on the marketing site) and the letter-style
+   body copy, which reads left-aligned rather than centered like the rest
+   of the landing sections. */
+
+.meet-founder__photo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--app-cta);
+  box-shadow: var(--app-shadow);
+  margin: 0 auto 1.5rem;
+  display: block;
+}
+
+.meet-founder__body {
+  text-align: left;
+  max-width: 60ch;
+  margin: 0 auto;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: var(--app-text-muted);
+}
+
+.meet-founder__body p {
+  margin: 0 0 1.15rem;
+}
+
+.meet-founder__signature {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--app-text-primary);
+  margin-top: 1.75rem !important;
+  margin-bottom: 0 !important;
+}

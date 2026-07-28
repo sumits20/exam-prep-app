@@ -7,6 +7,7 @@ import { AuthProvider } from './lib/AuthContext';
 import { Login } from './pages/Login';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
+import { MeetTheFounder } from './pages/MeetTheFounder';
 import { NavShell } from './components/NavShell';
 import { ExamPicker } from './pages/ExamPicker';
 import { ExamSession } from './pages/ExamSession';
@@ -58,6 +59,7 @@ export default function App() {
             (a homepage plus Privacy Policy / Terms of Service, all publicly crawlable). */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/meet-the-founder" element={<MeetTheFounder />} />
 
         {session ? (
           <Route element={<AuthedApp session={session} />}>

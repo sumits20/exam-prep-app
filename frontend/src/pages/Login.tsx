@@ -86,6 +86,7 @@ export function Login() {
       <header className="landing__topbar">
         <span className="landing__brand">ExamOwl</span>
         <nav className="landing__topnav">
+          <Link to="/meet-the-founder">Meet the Founder</Link>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
           <button
@@ -216,6 +217,7 @@ export function Login() {
       <footer className="landing__footer">
         <span className="landing__brand">ExamOwl</span>
         <div className="landing__footer-links">
+          <Link to="/meet-the-founder">Meet the Founder</Link>
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Service</Link>
         </div>

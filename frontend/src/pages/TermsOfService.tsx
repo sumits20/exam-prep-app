@@ -116,6 +116,7 @@ export function TermsOfService() {
 
         <div className="legal-doc__footer">
           <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/meet-the-founder">Meet the Founder</Link>
         </div>
       </div>
     </div>
