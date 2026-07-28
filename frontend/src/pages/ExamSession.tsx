@@ -29,6 +29,14 @@ export function ExamSession() {
           navigate(`/exam/${sessionId}/summary`, { replace: true });
           return;
         }
+        // Resume at the first unanswered question, not question 1. If every
+        // question already has a selectedOption (answered but not yet
+        // submitted), clamp to the last question rather than going out of bounds.
+        const answeredCount = res.questions.filter((qq) => qq.selectedOption).length;
+        const firstUnanswered = res.questions.findIndex((qq) => !qq.selectedOption);
+        const resumeIndex = firstUnanswered === -1 ? res.questions.length - 1 : firstUnanswered;
+        console.log(`[ExamSession] resume: ${answeredCount}/${res.questions.length} answered, starting at index ${resumeIndex}`);
+        setIndex(resumeIndex);
         setData(res);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load exam session'));
