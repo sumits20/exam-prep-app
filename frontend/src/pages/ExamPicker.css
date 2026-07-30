@@ -21,12 +21,6 @@
   color: var(--app-error);
 }
 
-.exam-picker__loading {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: var(--app-text-muted);
-}
-
 .exam-picker__list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

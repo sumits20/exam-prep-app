@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthSession } from '../lib/AuthContext';
+import { ServerWakeLoader } from '../components/ServerWakeLoader';
 import { createExamSession, getExamHistory, getExamTypes } from '../lib/api';
 import { MAX_IN_PROGRESS_PER_EXAM_TYPE } from '../lib/constants';
 import { describeExamShape } from '../lib/examShape';
@@ -49,7 +50,7 @@ export function ExamPicker() {
         </p>
       )}
 
-      {!examTypes && !error && <p className="exam-picker__loading">Loading exam types…</p>}
+      {!examTypes && !error && <ServerWakeLoader isLoading={!examTypes && !error} />}
 
       <div className="exam-picker__list">
         {examTypes?.map((type) => {

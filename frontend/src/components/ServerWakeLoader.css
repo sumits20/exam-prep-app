@@ -1,0 +1,51 @@
+.server-wake {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(360px, 100%);
+  padding: 1.5rem 0;
+}
+
+.server-wake__track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--app-border-strong);
+  overflow: hidden;
+}
+
+.server-wake__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--app-accent), var(--app-cta));
+}
+
+.server-wake__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.3em;
+}
+
+.server-wake__message {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--app-text-primary);
+  margin: 0;
+}
+
+.server-wake__percent {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--app-text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.server-wake__caption {
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--app-text-muted);
+  margin: 0;
+}
